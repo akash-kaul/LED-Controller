@@ -34,6 +34,9 @@ class _AppState extends State<CupertinoTestApp> {
 
     @override
     Widget build (BuildContext context) {
+        SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+        ]);
         return CupertinoApp(
             home: HomePage(),
             // initialRoute: '/',
@@ -232,6 +235,42 @@ class _SecondPageState extends State<SecondPage> {
             });
     }
 
+    _saveDevice(newDevice) async {
+        final result = await showCupertinoDialog(
+            context: context,
+            builder: (BuildContext context){
+                return CupertinoAlertDialog(
+                    title: Text('Remember Device'),
+                    content: Column(
+                        children: <Widget> [
+                            SizedBox(height: 20),
+                            Text('Would you like to remember this device for later?'),
+                        ],
+                    ),
+                    actions: <Widget> [
+                        CupertinoButton(
+                            child: Text('YES'),
+                            onPressed: () {
+                                Navigator.pop(context, "YES");
+                            },
+                        ),
+                        CupertinoButton(
+                            child: Text('NO'),
+                            onPressed: () {
+                                Navigator.pop(context);
+                            },
+                        ),
+                    ],
+                );
+            }
+        );
+        if (result != null) {
+            currentTheme.addDevice(newDevice);
+            // widget.ledDev.disconnect();
+            // Navigator.popUntil(context, ModalRoute.withName('/'));
+        };
+    }
+
 
       @override
       void initState() {
@@ -323,6 +362,7 @@ class _SecondPageState extends State<SecondPage> {
                                                       _services = await device.discoverServices();
 
                                                       if (_connectedDevice != null){
+                                                          _saveDevice(_connectedDevice);
                                                           Navigator.push(
                                                               context,
                                                               CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
@@ -596,8 +636,6 @@ class _ColorPageState extends State<ColorPage> {
     double _dropdownHeight2 = 0;
     double _dropdownHeight3 = 0;
     bool pressAttention = false;
-    String textholder = "Turn LEDs ON";
-    Icon addColor = null;
     double sliderValue = 64;
     int currentTabIndex = 0;
     final Map<Guid, List<int>> readValues = new Map<Guid, List<int>>();
@@ -1219,7 +1257,7 @@ class _ColorPageState extends State<ColorPage> {
                                                 width: double.infinity,
                                                 child: CupertinoButton(
                                                     color: pressAttention ? CupertinoColors.activeOrange : CupertinoColors.activeBlue,
-                                                    child: Text(textholder, style: TextStyle(color: CupertinoColors.white)),
+                                                    child: Text(pressAttention ? "Turn LEDs OFF" : "Turn LEDs ON", style: TextStyle(color: CupertinoColors.white)),
                                                     onPressed: () {
                                                         setState(() {
                                                             if (_height == 450){
@@ -1231,8 +1269,6 @@ class _ColorPageState extends State<ColorPage> {
                                                                 _height2 = 50;
                                                             }
                                                             pressAttention = !pressAttention;
-                                                            textholder = pressAttention ? "Turn LEDs OFF" : "Turn LEDs ON";
-                                                            addColor = pressAttention ? Icon(Icons.add) : null;
                                                         });
                                                         if (pressAttention){
                                                             // if (box.containsKey('currentColor')){
@@ -1310,7 +1346,7 @@ class _ColorPageState extends State<ColorPage> {
                                                             backgroundColor: Colors.red,
 
                                                             // , style: TextStyle(color: Colors.black)
-                                                            child: addColor,
+                                                            child: pressAttention ? Icon(Icons.add) : null,
                                                             onPressed: () async {
                                                                 final info = await showCupertinoDialog(
                                                                     context: context,
@@ -1400,7 +1436,7 @@ class _ColorPageState extends State<ColorPage> {
                                                     backgroundColor: Colors.red,
 
                                                     // , style: TextStyle(color: Colors.black)
-                                                    child: addColor,
+                                                    child: pressAttention ? Icon(Icons.add) : null,
                                                     onPressed: () async {
                                                         final info = await showCupertinoDialog(
                                                             context: context,
@@ -1507,7 +1543,7 @@ class _ColorPageState extends State<ColorPage> {
                                                 width: double.infinity,
                                                 child: CupertinoButton(
                                                     color: pressAttention ? CupertinoColors.activeOrange : CupertinoColors.activeBlue,
-                                                    child: Text(textholder, style: TextStyle(color: CupertinoColors.white)),
+                                                    child: Text(pressAttention ? "Turn LEDs OFF" : "Turn LEDs ON", style: TextStyle(color: CupertinoColors.white)),
                                                     onPressed: () {
                                                         setState(() {
                                                             if (_height == 450){
@@ -1519,8 +1555,6 @@ class _ColorPageState extends State<ColorPage> {
                                                                 _height2 = 50;
                                                             }
                                                             pressAttention = !pressAttention;
-                                                            textholder = pressAttention ? "Turn LEDs OFF" : "Turn LEDs ON";
-                                                            addColor = pressAttention ? Icon(Icons.add) : null;
                                                         });
                                                         if (pressAttention){
                                                             // if (box.containsKey('currentColor')){
@@ -1579,11 +1613,11 @@ class _ColorPageState extends State<ColorPage> {
                                                                     borderRadius: BorderRadius.all(Radius.circular(0)),
                                                                     onPressed: () {
                                                                         setState(() {
-                                                                            if (_dropdownHeight1 == 100){
+                                                                            if (_dropdownHeight1 == 150){
                                                                                 _dropdownHeight1 = 0;
                                                                             }
                                                                             else{
-                                                                                _dropdownHeight1 = 100;
+                                                                                _dropdownHeight1 = 150;
                                                                             }
                                                                         });
                                                                     }
@@ -1711,14 +1745,39 @@ class _ColorPageState extends State<ColorPage> {
                                                                             splashColor: Colors.transparent,
                                                                             elevation: 10,
                                                                             focusElevation: 0,
-                                                                            child: Text('Test', style: TextStyle(color: Colors.white)),
+                                                                            padding: EdgeInsets.all(0.0),
+                                                                            child: Container(
+                                                                                width: double.infinity,
+                                                                                // height: double.infinity,
+                                                                                decoration: BoxDecoration(
+                                                                                    // borderRadius: BorderRadius.all(Radius.circular(50)),
+                                                                                    gradient: LinearGradient(
+                                                                                        colors: <Color>[
+                                                                                            const Color(0xFFFF0064),
+                                                                                            const Color(0xFFFF7600),
+                                                                                            const Color(0xFFFFD500),
+                                                                                            const Color(0xFF8CFE00),
+                                                                                            const Color(0xFF00E86C),
+                                                                                            const Color(0xFF00F4F2),
+                                                                                            const Color(0xFF00CCFF),
+                                                                                            const Color(0xFF70A2FF),
+                                                                                            const Color(0xFFA96CFF),
+                                                                                        ],
+                                                                                    ),
+                                                                                ),
+                                                                                child: Align(
+                                                                                    alignment: Alignment.center,
+                                                                                    child: Text('Rainbow', style: TextStyle(color: Colors.white)),
+                                                                                ),
+                                                                            ),
                                                                             // color: currentTheme.getBool() ? CupertinoColors.lightBackgroundGray : CupertinoColors.lightBackgroundGray,
-                                                                            color: Colors.grey,
+                                                                            // color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
+                                                                                    currentAnimation = "Rainbow";
                                                                                     lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("Fire"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode("RainbowAnimation"));
                                                                             },
                                                                         ),
                                                                         RaisedButton(
@@ -1749,11 +1808,11 @@ class _ColorPageState extends State<ColorPage> {
                                                                     borderRadius: BorderRadius.all(Radius.circular(0)),
                                                                     onPressed: () {
                                                                         setState(() {
-                                                                            if (_dropdownHeight2 == 100){
+                                                                            if (_dropdownHeight2 == 150){
                                                                                 _dropdownHeight2 = 0;
                                                                             }
                                                                             else{
-                                                                                _dropdownHeight2 = 100;
+                                                                                _dropdownHeight2 = 150;
                                                                             }
                                                                         });
                                                                     }
@@ -1772,33 +1831,33 @@ class _ColorPageState extends State<ColorPage> {
                                                                 duration: Duration(milliseconds: 500),
                                                                 curve: Curves.easeInOut,
                                                             ),
-                                                            SizedBox(height: 20),
-                                                            SizedBox(
-                                                                width: double.infinity,
-                                                                child: CupertinoButton(
-                                                                    color: currentTheme.getBool() ? CupertinoColors.darkBackgroundGray : CupertinoColors.lightBackgroundGray,
-                                                                    child: Text('Random Animations', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.black)),
-                                                                    borderRadius: BorderRadius.all(Radius.circular(0)),
-                                                                    onPressed: () {
-                                                                        setState(() {
-                                                                            if (_dropdownHeight3 == 100){
-                                                                                _dropdownHeight3 = 0;
-                                                                            }
-                                                                            else{
-                                                                                _dropdownHeight3 = 100;
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                ),
-                                                            ),
-                                                            AnimatedContainer(
-                                                                height: _dropdownHeight3,
-                                                                alignment: Alignment.topCenter,
-                                                                width: double.infinity,
-                                                                child: Text('Dropdown 3'),
-                                                                duration: Duration(milliseconds: 500),
-                                                                curve: Curves.easeInOut,
-                                                            ),
+                                                            // SizedBox(height: 20),
+                                                            // SizedBox(
+                                                            //     width: double.infinity,
+                                                            //     child: CupertinoButton(
+                                                            //         color: currentTheme.getBool() ? CupertinoColors.darkBackgroundGray : CupertinoColors.lightBackgroundGray,
+                                                            //         child: Text('Random Animations', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.black)),
+                                                            //         borderRadius: BorderRadius.all(Radius.circular(0)),
+                                                            //         onPressed: () {
+                                                            //             setState(() {
+                                                            //                 if (_dropdownHeight3 == 100){
+                                                            //                     _dropdownHeight3 = 0;
+                                                            //                 }
+                                                            //                 else{
+                                                            //                     _dropdownHeight3 = 100;
+                                                            //                 }
+                                                            //             });
+                                                            //         }
+                                                            //     ),
+                                                            // ),
+                                                            // AnimatedContainer(
+                                                            //     height: _dropdownHeight3,
+                                                            //     alignment: Alignment.topCenter,
+                                                            //     width: double.infinity,
+                                                            //     child: Text('Dropdown 3'),
+                                                            //     duration: Duration(milliseconds: 500),
+                                                            //     curve: Curves.easeInOut,
+                                                            // ),
                                                         ],
                                                     ),
                                                 ),

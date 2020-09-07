@@ -7,4 +7,3 @@ import 'package:flutter/material.dart';
 
 ThemeNotifier currentTheme = ThemeNotifier();
 Box box;
-// Box colorBox;
