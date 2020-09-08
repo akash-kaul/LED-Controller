@@ -140,7 +140,18 @@ class _MyHomePageState extends State<HomePage> {
                                             size: 250,
                                         ),
                                         onPressed: () {
-                                            Navigator.of(context).push(new SecondPageRoute());
+                                            if (currentTheme.getSavedDevices().length > 0) {
+                                                Navigator.push(
+                                                    context,
+                                                    CupertinoPageRoute(builder: (context) => SavedDevicesPage())
+                                                );
+                                            }
+                                            else{
+                                                Navigator.push(
+                                                    context,
+                                                    CupertinoPageRoute(builder: (context) => SecondPage())
+                                                );
+                                            }
                                         },
                                         pressedOpacity: 0.5,
                                         borderRadius: BorderRadius.circular(1000),
@@ -192,11 +203,94 @@ class _MyHomePageState extends State<HomePage> {
 //
 //     MyButtonModal({this.changeButtonChild = false});
 // }
-
-class SecondPageRoute extends CupertinoPageRoute {
-    SecondPageRoute()
-        :super(builder: (BuildContext context) => new SecondPage());
+class SavedDevicesPage extends StatefulWidget {
+    @override
+    _SavedDevicesPageState createState() => _SavedDevicesPageState();
 }
+
+class _SavedDevicesPageState extends State<SavedDevicesPage> {
+    BluetoothDevice _connectedDevice;
+    List<BluetoothService> _services;
+
+    List<Widget> _buildListViewOfConnectedDevices() {
+        List<Widget> containers = new List<Widget>();
+        for (BluetoothDevice device in currentTheme.getSavedDevices()) {
+            containers.add(
+                Container(
+                    height: 20,
+                    child: CupertinoButton(
+                        child: Text(device.name),
+                        onPressed: () async {
+                            try {
+                                await device.connect();
+                                setState(() {
+                                    _connectedDevice = device;
+                                });
+                                _services = await device.discoverServices();
+                                if (_connectedDevice != null) {
+                                    Navigator.push(
+                                        context,
+                                        CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
+                                    );
+                                }
+                            }
+                            catch (e) {
+                                if (e.code != 'already_connected') {
+                                    // setState(() {
+                                    //    changeView[count] = true;
+                                    // });
+                                    await showCupertinoDialog(
+                                        context: context,
+                                        builder: (BuildContext context){
+                                            return CupertinoAlertDialog(
+                                                title: Text('Device Not Available'),
+                                                content: Column(
+                                                    children: <Widget> [
+                                                        SizedBox(height: 20),
+                                                        Text('It seems this BLE device is already connected. Please disconnect the device and try again.'),
+                                                    ],
+                                                ),
+                                                actions: <Widget> [
+                                                    CupertinoButton(
+                                                        child: Text('OK'),
+                                                        onPressed: () {
+                                                            Navigator.pop(context);
+                                                        },
+                                                    ),
+                                                ],
+                                            );
+                                        }
+                                    );
+                                }
+                            }
+                        }
+                    ),
+                ),
+            );
+        }
+        return containers;
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return CupertinoPageScaffold(
+            navigationBar: CupertinoNavigationBar(
+                padding: EdgeInsetsDirectional.only(end: 5.0),
+                middle: Text('Saved Devices'),
+            ),
+            child: SafeArea(
+                child: Column(
+                    children: _buildListViewOfConnectedDevices()
+                ),
+            ),
+        );
+    }
+}
+
+// class SecondPageRoute extends CupertinoPageRoute {
+//     SecondPageRoute()
+//         :super(builder: (BuildContext context) => new SecondPage());
+// }
 
 class SecondPage extends StatefulWidget {
 
@@ -212,6 +306,7 @@ class _SecondPageState extends State<SecondPage> {
 
     BluetoothDevice _connectedDevice;
     List<BluetoothService> _services;
+
     // final _writeController = TextEditingController();
     double _height = 0;
     List<Widget> listConnect;
@@ -244,7 +339,7 @@ class _SecondPageState extends State<SecondPage> {
                     content: Column(
                         children: <Widget> [
                             SizedBox(height: 20),
-                            Text('Would you like to remember this device for later?'),
+                            Text('Would you like to remember this device?'),
                         ],
                     ),
                     actions: <Widget> [
@@ -361,8 +456,40 @@ class _SecondPageState extends State<SecondPage> {
                                                       });
                                                       _services = await device.discoverServices();
 
-                                                      if (_connectedDevice != null){
-                                                          _saveDevice(_connectedDevice);
+                                                      if (_connectedDevice != null && !currentTheme.getSavedDevices().contains(_connectedDevice)){
+                                                          final result = await showCupertinoDialog(
+                                                              context: context,
+                                                              builder: (BuildContext context){
+                                                                  return CupertinoAlertDialog(
+                                                                      title: Text('Remember Device'),
+                                                                      content: Column(
+                                                                          children: <Widget> [
+                                                                              SizedBox(height: 20),
+                                                                              Text('Would you like to remember this device?'),
+                                                                          ],
+                                                                      ),
+                                                                      actions: <Widget> [
+                                                                          CupertinoButton(
+                                                                              child: Text('YES'),
+                                                                              onPressed: () {
+                                                                                  Navigator.pop(context, "YES");
+                                                                              },
+                                                                          ),
+                                                                          CupertinoButton(
+                                                                              child: Text('NO'),
+                                                                              onPressed: () {
+                                                                                  Navigator.pop(context);
+                                                                              },
+                                                                          ),
+                                                                      ],
+                                                                  );
+                                                              }
+                                                          );
+                                                          if (result != null) {
+                                                              currentTheme.addDevice(_connectedDevice);
+                                                              // widget.ledDev.disconnect();
+                                                              // Navigator.popUntil(context, ModalRoute.withName('/'));
+                                                          };
                                                           Navigator.push(
                                                               context,
                                                               CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
@@ -641,22 +768,8 @@ class _ColorPageState extends State<ColorPage> {
     final Map<Guid, List<int>> readValues = new Map<Guid, List<int>>();
     BluetoothService _ledServiceConnect;
     BluetoothCharacteristic _ledCharacteristicConnect;
-    // Color currentColor = Colors.blue;
-    // void changeColor(Color color) {
-    //     setState(() => currentColor = color);
-    //     _ledCharacteristicConnect.write(utf8.encode(color.toString()));
-    //     // setState(() {
-    //     //     currentColor = color;
-    //     //     count += 1;
-    //     // });
-    //     // if (count % 10 == 0){
-    //     //     _ledCharacteristicConnect.write(utf8.encode(color.toString()));
-    //     //     setState(() => count = 0);
-    //     // }
-    // }
     Color currentColor;
-    String currentAnimation;
-    bool lastValueWasColor = false;
+    String sendValue;
     // int currentAlpha = 0;
     // Map<String, int> myData = new Map();
     // calculateNewValue(int oldValue) {
@@ -854,9 +967,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.pink.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.pink.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -871,9 +985,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.red.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.red.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -888,9 +1003,9 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.deepOrange.value);
-                        lastValueWasColor = true;
+                        sendValue = Color(Colors.deepOrange.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -905,9 +1020,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.orange.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.orange.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -922,9 +1038,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.amber.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.amber.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -939,9 +1056,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.yellow.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.yellow.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -956,9 +1074,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.lime.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.lime.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -973,9 +1092,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.lightGreen.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.lightGreen.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -990,9 +1110,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.green.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.green.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1007,9 +1128,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.teal.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.teal.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1024,9 +1146,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.cyan.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.cyan.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1041,9 +1164,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.lightBlue.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.lightBlue.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1058,9 +1182,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.blue.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.blue.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1075,9 +1200,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.indigo.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.indigo.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1092,9 +1218,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.purple.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.purple.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1109,9 +1236,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.deepPurple.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.deepPurple.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             )
         );
@@ -1126,9 +1254,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.blueGrey.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.blueGrey.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             ),
         );
@@ -1143,9 +1272,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.brown.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.brown.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             ),
         );
@@ -1181,9 +1311,10 @@ class _ColorPageState extends State<ColorPage> {
                 ),
                 onPressed: () {
                     setState(() {
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = 'Rainbow';
                     });
-                    _ledCharacteristicConnect.write(utf8.encode('Rainbow'));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             ),
         );
@@ -1198,9 +1329,10 @@ class _ColorPageState extends State<ColorPage> {
                 onPressed: () {
                     setState(() {
                         currentColor = Color(Colors.white.value);
-                        lastValueWasColor = true;
+                        // lastValueWasColor = true;
+                        sendValue = Color(Colors.white.value).toString();
                     });
-                    _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                    _ledCharacteristicConnect.write(utf8.encode(sendValue));
                 },
             ),
         );
@@ -1279,18 +1411,12 @@ class _ColorPageState extends State<ColorPage> {
                                                             //     setState(() => currentColor = Colors.white);
                                                             //     box.put('currentColor', Colors.white);
                                                             // }
-                                                            if (lastValueWasColor || currentColor == null && currentAnimation == null) {
-                                                                if (currentColor == null){
-                                                                    setState(() {
-                                                                        currentColor = Colors.white;
-                                                                        lastValueWasColor = true;
-                                                                    });
-                                                                }
-                                                                _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                                                            if (sendValue == null){
+                                                                setState(() {
+                                                                    sendValue = Color(Colors.white.value).toString();
+                                                                });
                                                             }
-                                                            else {
-                                                                _ledCharacteristicConnect.write(utf8.encode(currentAnimation));
-                                                            }
+                                                            _ledCharacteristicConnect.write(utf8.encode(sendValue));
 
                                                         }
                                                         else {
@@ -1421,12 +1547,12 @@ class _ColorPageState extends State<ColorPage> {
                                                                 );
                                                                 if (info != null) {
                                                                     setState((){
+                                                                        sendValue = info.toString();
                                                                         currentColor = info;
-                                                                        lastValueWasColor = true;
                                                                     });
                                                                     // box.put('currentColor', currentColor);
                                                                     _ledCharacteristicConnect.write(
-                                                                                utf8.encode(currentColor.toString()));
+                                                                                utf8.encode(sendValue));
                                                                 };
                                                             },
                                                         ),
@@ -1437,88 +1563,6 @@ class _ColorPageState extends State<ColorPage> {
 
                                                     // , style: TextStyle(color: Colors.black)
                                                     child: pressAttention ? Icon(Icons.add) : null,
-                                                    onPressed: () async {
-                                                        final info = await showCupertinoDialog(
-                                                            context: context,
-                                                            builder: (BuildContext context) {
-                                                                Color tempColor = currentColor;
-                                                                return StatefulBuilder(
-                                                                    builder: (context, setState){
-                                                                        return CupertinoAlertDialog(
-                                                                            title: Text('Choose Color'),
-                                                                            content: Align(
-                                                                                alignment: Alignment.center,
-                                                                                child: Column(
-                                                                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                                                                    children: <Widget> [
-                                                                                        SizedBox(height: 20),
-                                                                                        CircleColorPicker(
-                                                                                            thumbRadius: 10,
-                                                                                            thumbColor: Colors.white,
-                                                                                            initialColor: currentColor,
-                                                                                            colorListener: (int value) {
-                                                                                                setState(() {
-                                                                                                    tempColor = Color(value);
-                                                                                                    // myData['color'] = value;
-                                                                                                });
-                                                                                            },
-                                                                                        ),
-                                                                                        // SizedBox(height: 20),
-                                                                                        // BarColorPicker(
-                                                                                        //     cornerRadius: 10,
-                                                                                        //     pickMode: PickMode.Grey,
-                                                                                        //     colorListener: (int value) {
-                                                                                        //         setState(() {
-                                                                                        //             currentAlpha = calculateNewValue(Color(value).value);
-                                                                                        //              myData['alpha'] = currentAlpha;
-                                                                                        //         });
-                                                                                        //     },
-                                                                                        // ),
-                                                                                        SizedBox(
-                                                                                            height: 20,
-                                                                                            child: Text('Preview'),
-                                                                                        ),
-                                                                                        Container(
-                                                                                          width: double.infinity,
-                                                                                          height: 50,
-                                                                                          alignment: Alignment.center,
-                                                                                          decoration: BoxDecoration(
-                                                                                              color: tempColor,
-                                                                                              borderRadius: BorderRadius.all(Radius.circular(10))
-                                                                                          ),
-                                                                                        ),
-                                                                                    ],
-                                                                                ),
-                                                                            ),
-                                                                            actions: <Widget> [
-                                                                                CupertinoButton(
-                                                                                    child: Text('Confirm', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
-                                                                                    onPressed: () {
-                                                                                        Navigator.pop(context, tempColor);
-                                                                                    },
-                                                                                ),
-                                                                                CupertinoButton(
-                                                                                    child: Text('Cancel', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
-                                                                                    onPressed: () {
-                                                                                        Navigator.pop(context);
-                                                                                    },
-                                                                                ),
-                                                                            ],
-                                                                        );
-                                                                    },
-                                                                );
-                                                            },
-                                                        );
-                                                        if (info != null) {
-                                                            setState((){
-                                                                currentColor = info;
-                                                                lastValueWasColor = true;
-                                                            });
-                                                            // box.put('currentColor', currentColor);
-                                                            _ledCharacteristicConnect.write(
-                                                                        utf8.encode(currentColor.toString()));
-                                                        };
-                                                    },
                                                 ),
                                                 duration: Duration(seconds: 1),
                                                 curve: Curves.easeInOut,
@@ -1565,18 +1609,12 @@ class _ColorPageState extends State<ColorPage> {
                                                             //     setState(() => currentColor = Colors.white);
                                                             //     box.put('currentColor', Colors.white);
                                                             // }
-                                                            if (lastValueWasColor || (currentColor == null && currentAnimation == null)) {
-                                                                if (currentColor == null){
-                                                                    setState(() {
-                                                                        currentColor = Colors.white;
-                                                                        lastValueWasColor = true;
-                                                                    });
-                                                                }
-                                                                _ledCharacteristicConnect.write(utf8.encode(currentColor.toString()));
+                                                            if (sendValue == null){
+                                                                setState(() {
+                                                                    sendValue = Color(Colors.white.value).toString();
+                                                                });
                                                             }
-                                                            else {
-                                                                _ledCharacteristicConnect.write(utf8.encode(currentAnimation));
-                                                            }
+                                                            _ledCharacteristicConnect.write(utf8.encode(sendValue));
 
                                                         }
                                                         else {
@@ -1663,10 +1701,10 @@ class _ColorPageState extends State<ColorPage> {
                                                                             color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    currentAnimation = "Fire";
-                                                                                    lastValueWasColor = false;
+                                                                                    sendValue = "Fire";
+                                                                                    // lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("Fire"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
                                                                         RaisedButton(
@@ -1688,10 +1726,10 @@ class _ColorPageState extends State<ColorPage> {
                                                                             color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    currentAnimation = "BouncingBalls";
-                                                                                    lastValueWasColor = false;
+                                                                                    sendValue = "BouncingBalls";
+                                                                                    // lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("BouncingBalls"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
                                                                         RaisedButton(
@@ -1721,10 +1759,10 @@ class _ColorPageState extends State<ColorPage> {
                                                                             // color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    currentAnimation = "Pacifica";
-                                                                                    lastValueWasColor = false;
+                                                                                    sendValue = "Pacifica";
+                                                                                    // lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("Pacifica"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
                                                                         RaisedButton(
@@ -1736,9 +1774,9 @@ class _ColorPageState extends State<ColorPage> {
                                                                             color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    lastValueWasColor = false;
+                                                                                    // lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("Fire"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
                                                                         RaisedButton(
@@ -1774,10 +1812,10 @@ class _ColorPageState extends State<ColorPage> {
                                                                             // color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    currentAnimation = "Rainbow";
-                                                                                    lastValueWasColor = false;
+                                                                                    sendValue = "Rainbow";
+                                                                                    // lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("RainbowAnimation"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
                                                                         RaisedButton(
@@ -1789,9 +1827,9 @@ class _ColorPageState extends State<ColorPage> {
                                                                             color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    lastValueWasColor = false;
+                                                                                    // lastValueWasColor = false;
                                                                                 });
-                                                                                _ledCharacteristicConnect.write(utf8.encode("Fire"));
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
                                                                     ],
