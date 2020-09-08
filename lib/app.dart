@@ -214,60 +214,109 @@ class _SavedDevicesPageState extends State<SavedDevicesPage> {
 
     List<Widget> _buildListViewOfConnectedDevices() {
         List<Widget> containers = new List<Widget>();
-        for (BluetoothDevice device in currentTheme.getSavedDevices()) {
+        currentTheme.getSavedDevices().forEach((device) {
             containers.add(
-                Container(
-                    height: 20,
-                    child: CupertinoButton(
-                        child: Text(device.name),
-                        onPressed: () async {
-                            try {
-                                await device.connect();
-                                setState(() {
-                                    _connectedDevice = device;
-                                });
-                                _services = await device.discoverServices();
-                                if (_connectedDevice != null) {
-                                    Navigator.push(
-                                        context,
-                                        CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
-                                    );
+                Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                        height: 60,
+                        width: 250,
+                        child: CupertinoButton(
+                            color: CupertinoColors.activeBlue,
+                            pressedOpacity: 0.5,
+                            borderRadius: BorderRadius.circular(1000),
+                            child: Padding(
+                                padding: EdgeInsets.only(left: 5, right: 5),
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                        // Expanded(
+                                        //     flex: 1,
+                                        //     child: Column(
+                                        //         mainAxisAlignment: MainAxisAlignment.center,
+                                        //         children: <Widget>[
+                                        //             Icon(
+                                        //                 CupertinoIcons.bluetooth,
+                                        //                 // color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.black,
+                                        //                 color: CupertinoColors.white,
+                                        //             ),
+                                        //         ],
+                                        //     ),
+                                        // ),
+                                        // Expanded(
+                                        //     flex: 10,
+                                        //     child: Column(
+                                        //         mainAxisAlignment: MainAxisAlignment.center,
+                                        //         children: <Widget>[
+                                        //             Text(
+                                        //                 device.name,
+                                        //                 // style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.black)
+                                        //                 style: TextStyle(color: CupertinoColors.white)
+                                        //             ),
+                                        //         ]
+                                        //     )
+                                        // )
+                                        Icon(
+                                            CupertinoIcons.bluetooth,
+                                            color: CupertinoColors.white,
+                                        ),
+                                        Text(
+                                            device.name,
+                                            style: TextStyle(color: CupertinoColors.white)
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            onPressed: () async {
+                                try {
+                                    await device.connect();
+                                    setState(() {
+                                        _connectedDevice = device;
+                                    });
+                                    _services = await device.discoverServices();
+                                    if (_connectedDevice != null) {
+                                        Navigator.push(
+                                            context,
+                                            CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
+                                        );
+                                    }
                                 }
-                            }
-                            catch (e) {
-                                if (e.code != 'already_connected') {
-                                    // setState(() {
-                                    //    changeView[count] = true;
-                                    // });
-                                    await showCupertinoDialog(
-                                        context: context,
-                                        builder: (BuildContext context){
-                                            return CupertinoAlertDialog(
-                                                title: Text('Device Not Available'),
-                                                content: Column(
-                                                    children: <Widget> [
-                                                        SizedBox(height: 20),
-                                                        Text('It seems this BLE device is already connected. Please disconnect the device and try again.'),
-                                                    ],
-                                                ),
-                                                actions: <Widget> [
-                                                    CupertinoButton(
-                                                        child: Text('OK'),
-                                                        onPressed: () {
-                                                            Navigator.pop(context);
-                                                        },
+                                catch (e) {
+                                    if (e.code != 'already_connected') {
+                                        // setState(() {
+                                        //    changeView[count] = true;
+                                        // });
+                                        await showCupertinoDialog(
+                                            context: context,
+                                            builder: (BuildContext context){
+                                                return CupertinoAlertDialog(
+                                                    title: Text('Device Not Available'),
+                                                    content: Column(
+                                                        children: <Widget> [
+                                                            SizedBox(height: 20),
+                                                            Text('It seems this BLE device is already connected. Please disconnect the device and try again.'),
+                                                        ],
                                                     ),
-                                                ],
-                                            );
-                                        }
-                                    );
+                                                    actions: <Widget> [
+                                                        CupertinoButton(
+                                                            child: Text('OK'),
+                                                            pressedOpacity: 0.5,
+                                                            onPressed: () {
+                                                                Navigator.pop(context);
+                                                            },
+                                                        ),
+                                                    ],
+                                                );
+                                            }
+                                        );
+                                    }
                                 }
                             }
-                        }
+                        ),
                     ),
                 ),
             );
-        }
+        });
         return containers;
     }
 
@@ -279,8 +328,54 @@ class _SavedDevicesPageState extends State<SavedDevicesPage> {
                 middle: Text('Saved Devices'),
             ),
             child: SafeArea(
+                // child: Column(
+                //     mainAxisAlignment: MainAxisAlignment.start,
+                //     crossAxisAlignment: CrossAxisAlignment.center,
+                //     children:  _buildListViewOfConnectedDevices()
+                // ),
                 child: Column(
-                    children: _buildListViewOfConnectedDevices()
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget> [
+                        SizedBox(height: 25),
+                        Container(
+                            height: 500,
+                            child: CustomScrollView(
+                                slivers: [
+                                    SliverList(
+                                        delegate: SliverChildListDelegate(
+                                            _buildListViewOfConnectedDevices(),
+                                        )
+                                    ),
+                                ],
+                            ),
+                        ),
+                        Align(
+                            alignment: Alignment.center,
+                            child: Container(
+                                height: 60,
+                                width: 250,
+                                child: CupertinoButton(
+                                    color: CupertinoColors.inactiveGray,
+                                    pressedOpacity: 0.5,
+                                    borderRadius: BorderRadius.circular(1000),
+                                    child: Padding(
+                                        padding: EdgeInsets.only(left: 5, right: 5),
+                                        child: Text(
+                                            'Find New Device',
+                                            style: TextStyle(color: CupertinoColors.white)
+                                        ),
+                                    ),
+                                    onPressed: () {
+                                        Navigator.push(
+                                            context,
+                                            CupertinoPageRoute(builder: (context) => SecondPage())
+                                        );
+                                    },
+                                ),
+                            ),
+                        ),
+                    ],
                 ),
             ),
         );
@@ -345,12 +440,14 @@ class _SecondPageState extends State<SecondPage> {
                     actions: <Widget> [
                         CupertinoButton(
                             child: Text('YES'),
+                            pressedOpacity: 0.5,
                             onPressed: () {
                                 Navigator.pop(context, "YES");
                             },
                         ),
                         CupertinoButton(
                             child: Text('NO'),
+                            pressedOpacity: 0.5,
                             onPressed: () {
                                 Navigator.pop(context);
                             },
@@ -441,6 +538,7 @@ class _SecondPageState extends State<SecondPage> {
                                           ),
                                           CupertinoButton(
                                               color: CupertinoColors.activeGreen,
+                                              pressedOpacity: 0.5,
                                               child: Text('Connect', style: TextStyle(color: (currentTheme.getBool()) ? CupertinoColors.white : CupertinoColors.black)),
                                               // child: changeView[count] ? CupertinoActivityIndicator() : Text('Connect', style: TextStyle(color: (currentTheme.getBool()) ? CupertinoColors.white : CupertinoColors.black)),
                                               onPressed: () async {
@@ -471,12 +569,14 @@ class _SecondPageState extends State<SecondPage> {
                                                                       actions: <Widget> [
                                                                           CupertinoButton(
                                                                               child: Text('YES'),
+                                                                              pressedOpacity: 0.5,
                                                                               onPressed: () {
                                                                                   Navigator.pop(context, "YES");
                                                                               },
                                                                           ),
                                                                           CupertinoButton(
                                                                               child: Text('NO'),
+                                                                              pressedOpacity: 0.5,
                                                                               onPressed: () {
                                                                                   Navigator.pop(context);
                                                                               },
@@ -490,6 +590,12 @@ class _SecondPageState extends State<SecondPage> {
                                                               // widget.ledDev.disconnect();
                                                               // Navigator.popUntil(context, ModalRoute.withName('/'));
                                                           };
+                                                          Navigator.push(
+                                                              context,
+                                                              CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
+                                                          );
+                                                      }
+                                                      else{
                                                           Navigator.push(
                                                               context,
                                                               CupertinoPageRoute(builder: (context) => ColorPage(ledDevice: _connectedDevice, ledServices: _services)),
@@ -515,6 +621,7 @@ class _SecondPageState extends State<SecondPage> {
                                                                       actions: <Widget> [
                                                                           CupertinoButton(
                                                                               child: Text('OK'),
+                                                                              pressedOpacity: 0.5,
                                                                               onPressed: () {
                                                                                   Navigator.pop(context);
                                                                               },
@@ -1388,6 +1495,7 @@ class _ColorPageState extends State<ColorPage> {
                                             SizedBox(
                                                 width: double.infinity,
                                                 child: CupertinoButton(
+                                                    pressedOpacity: 0.5,
                                                     color: pressAttention ? CupertinoColors.activeOrange : CupertinoColors.activeBlue,
                                                     child: Text(pressAttention ? "Turn LEDs OFF" : "Turn LEDs ON", style: TextStyle(color: CupertinoColors.white)),
                                                     onPressed: () {
@@ -1528,12 +1636,14 @@ class _ColorPageState extends State<ColorPage> {
                                                                                     ),
                                                                                     actions: <Widget> [
                                                                                         CupertinoButton(
+                                                                                            pressedOpacity: 0.5,
                                                                                             child: Text('Confirm', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
                                                                                             onPressed: () {
                                                                                                 Navigator.pop(context, tempColor);
                                                                                             },
                                                                                         ),
                                                                                         CupertinoButton(
+                                                                                            pressedOpacity: 0.5,
                                                                                             child: Text('Cancel', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
                                                                                             onPressed: () {
                                                                                                 Navigator.pop(context);
@@ -1586,6 +1696,7 @@ class _ColorPageState extends State<ColorPage> {
                                             SizedBox(
                                                 width: double.infinity,
                                                 child: CupertinoButton(
+                                                    pressedOpacity: 0.5,
                                                     color: pressAttention ? CupertinoColors.activeOrange : CupertinoColors.activeBlue,
                                                     child: Text(pressAttention ? "Turn LEDs OFF" : "Turn LEDs ON", style: TextStyle(color: CupertinoColors.white)),
                                                     onPressed: () {
@@ -1646,6 +1757,7 @@ class _ColorPageState extends State<ColorPage> {
                                                             SizedBox(
                                                                 width: double.infinity,
                                                                 child: CupertinoButton(
+                                                                    pressedOpacity: 0.5,
                                                                     color: currentTheme.getBool() ? CupertinoColors.darkBackgroundGray : CupertinoColors.lightBackgroundGray,
                                                                     child: Text('Premade Animations', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.black)),
                                                                     borderRadius: BorderRadius.all(Radius.circular(0)),
@@ -1812,7 +1924,7 @@ class _ColorPageState extends State<ColorPage> {
                                                                             // color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    sendValue = "Rainbow";
+                                                                                    sendValue = "RainbowAnimation";
                                                                                     // lastValueWasColor = false;
                                                                                 });
                                                                                 _ledCharacteristicConnect.write(utf8.encode(sendValue));
@@ -1841,6 +1953,7 @@ class _ColorPageState extends State<ColorPage> {
                                                             SizedBox(
                                                                 width: double.infinity,
                                                                 child: CupertinoButton(
+                                                                    pressedOpacity: 0.5,
                                                                     color: currentTheme.getBool() ? CupertinoColors.darkBackgroundGray : CupertinoColors.lightBackgroundGray,
                                                                     child: Text('Customizable Animations', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.black)),
                                                                     borderRadius: BorderRadius.all(Radius.circular(0)),
@@ -1861,6 +1974,7 @@ class _ColorPageState extends State<ColorPage> {
                                                                 alignment: Alignment.topCenter,
                                                                 width: double.infinity,
                                                                 child: CupertinoButton(
+                                                                    pressedOpacity: 0.5,
                                                                     child: Text('Dropdown 2'),
                                                                     onPressed: () {
                                                                         _ledCharacteristicConnect.write(utf8.encode("Fire"));
