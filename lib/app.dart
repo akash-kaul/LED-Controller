@@ -1430,7 +1430,10 @@ class _ColorPageState extends State<ColorPage> {
             RaisedButton(
                 color: Colors.white,
                 splashColor: Colors.transparent,
-                shape: RoundedRectangleBorder(borderRadius: new BorderRadius.circular(50.0)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: new BorderRadius.circular(50.0),
+                    // side: BorderSide(color: Colors.white),
+                ),
                 elevation: 10,
                 focusElevation: 0,
                 onPressed: () {
@@ -1443,6 +1446,23 @@ class _ColorPageState extends State<ColorPage> {
                 },
             ),
         );
+        // containers.add(
+        //     CupertinoButton(
+        //         color: Colors.white,
+        //         padding: EdgeInsets.all(0.0),
+        //         borderRadius: const BorderRadius.all(Radius.circular(50.0)),
+        //         pressedOpacity: 0.5,
+        //         child: Text(''),
+        //         onPressed: () {
+        //             setState(() {
+        //                 currentColor = Color(Colors.white.value);
+        //                 // lastValueWasColor = true;
+        //                 sendValue = Color(Colors.white.value).toString();
+        //             });
+        //             _ledCharacteristicConnect.write(utf8.encode(sendValue));
+        //         },
+        //     ),
+        // );
         return containers;
     }
     _navigateAndDisplay(BuildContext context) async{
@@ -1565,9 +1585,9 @@ class _ColorPageState extends State<ColorPage> {
                                                         CupertinoSlider(
                                                             activeColor: CupertinoColors.activeBlue,
                                                             value: sliderValue,
-                                                            max: 255,
+                                                            max: 200,
                                                             min: 0,
-                                                            divisions: 20,
+                                                            divisions: 15,
                                                             onChanged: (double val) {
                                                                 setState(() {
                                                                     sliderValue = val;
@@ -1786,16 +1806,18 @@ class _ColorPageState extends State<ColorPage> {
                                                                     mainAxisSpacing: 5,
                                                                     crossAxisCount: 2,
                                                                     children: <Widget> [
-                                                                        RaisedButton(
-                                                                            splashColor: Colors.transparent,
-                                                                            elevation: 10,
-                                                                            focusElevation: 0,
+                                                                        CupertinoButton(
+                                                                            // splashColor: Colors.transparent,
+                                                                            // elevation: 10,
+                                                                            // focusElevation: 0,
                                                                             padding: EdgeInsets.all(0.0),
+                                                                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                                                                            pressedOpacity: 0.5,
                                                                             child: Container(
                                                                                 width: double.infinity,
                                                                                 // height: double.infinity,
                                                                                 decoration: BoxDecoration(
-                                                                                    // borderRadius: BorderRadius.all(Radius.circular(50)),
+                                                                                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
                                                                                     gradient: LinearGradient(
                                                                                         colors: <Color>[
                                                                                             const Color(0xFFFF0064),
@@ -1819,10 +1841,13 @@ class _ColorPageState extends State<ColorPage> {
                                                                                 _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
-                                                                        RaisedButton(
-                                                                            splashColor: Colors.transparent,
-                                                                            elevation: 10,
-                                                                            focusElevation: 0,
+                                                                        CupertinoButton(
+                                                                            // splashColor: Colors.transparent,
+                                                                            // elevation: 10,
+                                                                            // focusElevation: 0,
+                                                                            padding: EdgeInsets.all(0.0),
+                                                                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                                                                            pressedOpacity: 0.5,
                                                                             child: Row(
                                                                                 crossAxisAlignment: CrossAxisAlignment.center,
                                                                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1844,16 +1869,18 @@ class _ColorPageState extends State<ColorPage> {
                                                                                 _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
-                                                                        RaisedButton(
-                                                                            splashColor: Colors.transparent,
-                                                                            elevation: 10,
-                                                                            focusElevation: 0,
+                                                                        CupertinoButton(
+                                                                            // splashColor: Colors.transparent,
+                                                                            // elevation: 10,
+                                                                            // focusElevation: 0,
                                                                             padding: EdgeInsets.all(0.0),
+                                                                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                                                                            pressedOpacity: 0.5,
                                                                             child: Container(
                                                                                 width: double.infinity,
                                                                                 // height: double.infinity,
                                                                                 decoration: BoxDecoration(
-                                                                                    // borderRadius: BorderRadius.all(Radius.circular(50)),
+                                                                                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
                                                                                     gradient: LinearGradient(
                                                                                         colors: <Color>[
                                                                                             const Color(0xFF00E86C),
@@ -1877,30 +1904,45 @@ class _ColorPageState extends State<ColorPage> {
                                                                                 _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
-                                                                        RaisedButton(
-                                                                            splashColor: Colors.transparent,
-                                                                            elevation: 10,
-                                                                            focusElevation: 0,
-                                                                            child: Text('Test', style: TextStyle(color: Colors.white)),
+                                                                        CupertinoButton(
+                                                                            // splashColor: Colors.transparent,
+                                                                            // elevation: 10,
+                                                                            // focusElevation: 0,
+                                                                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                                                                            padding: EdgeInsets.all(0.0),
+                                                                            pressedOpacity: 0.5,
+                                                                            child: Row(
+                                                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                                                children: <Widget> [
+                                                                                    Text('Rainbow Fade', style: TextStyle(color: Colors.white)),
+                                                                                    // Padding(
+                                                                                    //     padding: EdgeInsets.
+                                                                                    // )
+                                                                                    Icon(Icons.autorenew, color: Colors.white, size: 30),
+                                                                                ],
+                                                                            ),
                                                                             // color: currentTheme.getBool() ? CupertinoColors.lightBackgroundGray : CupertinoColors.lightBackgroundGray,
                                                                             color: Colors.grey,
                                                                             onPressed: () {
                                                                                 setState(() {
-                                                                                    // lastValueWasColor = false;
+                                                                                    sendValue = "RainbowFade";
                                                                                 });
                                                                                 _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
-                                                                        RaisedButton(
-                                                                            splashColor: Colors.transparent,
-                                                                            elevation: 10,
-                                                                            focusElevation: 0,
+                                                                        CupertinoButton(
+                                                                            // splashColor: Colors.transparent,
+                                                                            // elevation: 10,
+                                                                            // focusElevation: 0,
                                                                             padding: EdgeInsets.all(0.0),
+                                                                            pressedOpacity: 0.5,
+                                                                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
                                                                             child: Container(
                                                                                 width: double.infinity,
                                                                                 // height: double.infinity,
                                                                                 decoration: BoxDecoration(
-                                                                                    // borderRadius: BorderRadius.all(Radius.circular(50)),
+                                                                                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
                                                                                     gradient: LinearGradient(
                                                                                         colors: <Color>[
                                                                                             const Color(0xFFFF0064),
@@ -1930,10 +1972,13 @@ class _ColorPageState extends State<ColorPage> {
                                                                                 _ledCharacteristicConnect.write(utf8.encode(sendValue));
                                                                             },
                                                                         ),
-                                                                        RaisedButton(
-                                                                            splashColor: Colors.transparent,
-                                                                            elevation: 10,
-                                                                            focusElevation: 0,
+                                                                        CupertinoButton(
+                                                                            // splashColor: Colors.transparent,
+                                                                            // elevation: 10,
+                                                                            // focusElevation: 0,
+                                                                            borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                                                                            padding: EdgeInsets.all(0.0),
+                                                                            pressedOpacity: 0.5,
                                                                             child: Text('Test', style: TextStyle(color: Colors.white)),
                                                                             // color: currentTheme.getBool() ? CupertinoColors.lightBackgroundGray : CupertinoColors.lightBackgroundGray,
                                                                             color: Colors.grey,

@@ -154,7 +154,10 @@ class InfoPage extends StatelessWidget {
                 middle: Text('About'),
             ),
             child: SafeArea(
-                child: Text('This app was made by Akash Kaul. If you like the app, consider donating 1 million dollars to the Akash Kaul broke boy fund.'),
+                child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text('This app was made by Akash Kaul. If you like the app, consider donating 1 million dollars to the creator :)'),
+                ),
             ),
         );
     }
