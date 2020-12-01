@@ -828,6 +828,7 @@ class _SecondPageState extends State<SecondPage> {
                           'Select Device',
                           style: TextStyle(),
                         ),
+                        // middle: Text('Select Device')
                       ),
                       CupertinoSliverRefreshControl(
                         onRefresh: _refreshData,
@@ -1619,7 +1620,7 @@ class _ColorPageState extends State<ColorPage> {
                                                                                                 CircleColorPicker(
                                                                                                     thumbRadius: 10,
                                                                                                     thumbColor: Colors.white,
-                                                                                                    initialColor: currentColor,
+                                                                                                    initialColor: currentColor ?? Colors.red,
                                                                                                     colorListener: (int value) {
                                                                                                         setState(() {
                                                                                                             tempColor = Color(value);
@@ -1627,17 +1628,6 @@ class _ColorPageState extends State<ColorPage> {
                                                                                                         });
                                                                                                     },
                                                                                                 ),
-                                                                                                // SizedBox(height: 20),
-                                                                                                // BarColorPicker(
-                                                                                                //     cornerRadius: 10,
-                                                                                                //     pickMode: PickMode.Grey,
-                                                                                                //     colorListener: (int value) {
-                                                                                                //         setState(() {
-                                                                                                //             currentAlpha = calculateNewValue(Color(value).value);
-                                                                                                //              myData['alpha'] = currentAlpha;
-                                                                                                //         });
-                                                                                                //     },
-                                                                                                // ),
                                                                                                 SizedBox(
                                                                                                     height: 20,
                                                                                                     child: Text('Preview'),
@@ -1654,6 +1644,7 @@ class _ColorPageState extends State<ColorPage> {
                                                                                             ],
                                                                                         ),
                                                                                     ),
+                                                                                    // content: Container(),
                                                                                     actions: <Widget> [
                                                                                         CupertinoButton(
                                                                                             pressedOpacity: 0.5,
@@ -2014,15 +2005,157 @@ class _ColorPageState extends State<ColorPage> {
                                                                     }
                                                                 ),
                                                             ),
+
                                                             AnimatedContainer(
                                                                 height: _dropdownHeight2,
                                                                 alignment: Alignment.topCenter,
                                                                 width: double.infinity,
+                                                                padding: const EdgeInsets.only(top: 20),
                                                                 child: CupertinoButton(
+                                                                    color: Colors.grey,
                                                                     pressedOpacity: 0.5,
-                                                                    child: Text('Dropdown 2'),
-                                                                    onPressed: () {
-                                                                        _ledCharacteristicConnect.write(utf8.encode("Fire"));
+                                                                    child: Text('Letter A', style: TextStyle(color: Colors.white)),
+                                                                    onPressed: () async {
+                                                                        final info = await showCupertinoDialog(
+                                                                            context: context,
+                                                                            builder: (BuildContext context) {
+                                                                                Color tempColor = currentColor;
+                                                                                return StatefulBuilder(
+                                                                                    builder: (context, setState) {
+                                                                                        return CupertinoAlertDialog(
+                                                                                            title: Text('Choose Center Color'),
+                                                                                            content: Align(
+                                                                                                alignment: Alignment.center,
+                                                                                                child: Column(
+                                                                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                                                                    children: <Widget> [
+                                                                                                        SizedBox(height: 20),
+                                                                                                        CircleColorPicker(
+                                                                                                            thumbRadius: 10,
+                                                                                                            thumbColor: Colors.white,
+                                                                                                            initialColor: currentColor ?? Colors.red,
+                                                                                                            colorListener: (int value) {
+                                                                                                                setState(() {
+                                                                                                                    tempColor = Color(value);
+                                                                                                                    // myData['color'] = value;
+                                                                                                                });
+                                                                                                            },
+                                                                                                        ),
+                                                                                                        SizedBox(
+                                                                                                            height: 20,
+                                                                                                            child: Text('Preview'),
+                                                                                                        ),
+                                                                                                        Container(
+                                                                                                          width: double.infinity,
+                                                                                                          height: 50,
+                                                                                                          alignment: Alignment.center,
+                                                                                                          decoration: BoxDecoration(
+                                                                                                              color: tempColor,
+                                                                                                              borderRadius: BorderRadius.all(Radius.circular(10))
+                                                                                                          ),
+                                                                                                        ),
+                                                                                                    ],
+                                                                                                ),
+                                                                                            ),
+                                                                                            actions: <Widget> [
+                                                                                                CupertinoButton(
+                                                                                                    pressedOpacity: 0.5,
+                                                                                                    child: Text('Confirm', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
+                                                                                                    onPressed: () {
+                                                                                                        Navigator.pop(context, tempColor);
+                                                                                                    },
+                                                                                                ),
+                                                                                                CupertinoButton(
+                                                                                                    pressedOpacity: 0.5,
+                                                                                                    child: Text('Cancel', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
+                                                                                                    onPressed: () {
+                                                                                                        Navigator.pop(context);
+                                                                                                    },
+                                                                                                ),
+                                                                                            ],
+                                                                                        );
+                                                                                    },
+                                                                                );
+                                                                            },
+                                                                        );
+                                                                        if (info != null) {
+                                                                            String color1 = info.toString();
+                                                                            final info2 = await showCupertinoDialog(
+                                                                                context: context,
+                                                                                builder: (BuildContext context) {
+                                                                                    Color tempColor = currentColor;
+                                                                                    return StatefulBuilder(
+                                                                                        builder: (context, setState) {
+                                                                                            return CupertinoAlertDialog(
+                                                                                                title: Text('Choose Border Color'),
+                                                                                                content: Align(
+                                                                                                    alignment: Alignment.center,
+                                                                                                    child: Column(
+                                                                                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                                                                                        children: <Widget> [
+                                                                                                            SizedBox(height: 20),
+                                                                                                            CircleColorPicker(
+                                                                                                                thumbRadius: 10,
+                                                                                                                thumbColor: Colors.white,
+                                                                                                                initialColor: currentColor ?? Colors.red,
+                                                                                                                colorListener: (int value) {
+                                                                                                                    setState(() {
+                                                                                                                        tempColor = Color(value);
+                                                                                                                        // myData['color'] = value;
+                                                                                                                    });
+                                                                                                                },
+                                                                                                            ),
+                                                                                                            SizedBox(
+                                                                                                                height: 20,
+                                                                                                                child: Text('Preview'),
+                                                                                                            ),
+                                                                                                            Container(
+                                                                                                              width: double.infinity,
+                                                                                                              height: 50,
+                                                                                                              alignment: Alignment.center,
+                                                                                                              decoration: BoxDecoration(
+                                                                                                                  color: tempColor,
+                                                                                                                  borderRadius: BorderRadius.all(Radius.circular(10))
+                                                                                                              ),
+                                                                                                            ),
+                                                                                                        ],
+                                                                                                    ),
+                                                                                                ),
+                                                                                                actions: <Widget> [
+                                                                                                    CupertinoButton(
+                                                                                                        pressedOpacity: 0.5,
+                                                                                                        child: Text('Confirm', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
+                                                                                                        onPressed: () {
+                                                                                                            Navigator.pop(context, tempColor);
+                                                                                                        },
+                                                                                                    ),
+                                                                                                    CupertinoButton(
+                                                                                                        pressedOpacity: 0.5,
+                                                                                                        child: Text('Cancel', style: TextStyle(color: currentTheme.getBool() ? CupertinoColors.white : CupertinoColors.activeBlue)),
+                                                                                                        onPressed: () {
+                                                                                                            Navigator.pop(context);
+                                                                                                        },
+                                                                                                    ),
+                                                                                                ],
+                                                                                            );
+                                                                                        },
+                                                                                    );
+                                                                                },
+                                                                            );
+                                                                            if (info2 != null) {
+                                                                                setState((){
+                                                                                    sendValue = "A" + color1 + info2.toString();
+                                                                                    // currentColor = info;
+                                                                                });
+                                                                                _ledCharacteristicConnect.write(utf8.encode(sendValue));
+                                                                            }
+                                                                            // setState((){
+                                                                            //     sendValue = info.toString();
+                                                                            //     currentColor = info;
+                                                                            // });
+                                                                            // _ledCharacteristicConnect.write(
+                                                                            //             utf8.encode(sendValue));
+                                                                        };
                                                                     },
                                                                 ),
                                                                 duration: Duration(milliseconds: 500),
